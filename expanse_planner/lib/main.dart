@@ -1,3 +1,4 @@
+import 'package:expanse_planner/widgets/chart.dart';
 import 'package:expanse_planner/widgets/new_transaction.dart';
 import 'package:expanse_planner/widgets/transaction_list.dart';
 import 'package:flutter/material.dart';
@@ -61,6 +62,13 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final List<Transaction> _userTransactions = [];
 
+  List<Transaction> get _recentTransactions {
+    return _userTransactions
+        .where((tx) =>
+            tx.date.isAfter(DateTime.now().subtract(const Duration(days: 7))))
+        .toList();
+  }
+
   void _addNewTransaction(String txTitle, double txAmount) {
     final newTx = Transaction(
         id: DateTime.now().toString(),
@@ -102,14 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
           // mainAxisAlignment: MainAxisAlignment.spaceAround,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const SizedBox(
-              width: double.infinity,
-              child: Card(
-                color: Colors.blue,
-                elevation: 5,
-                child: Text('CHART!'),
-              ),
-            ),
+            Chart(recentTransactions: _recentTransactions),
             TransactionList(_userTransactions)
           ],
         ),
