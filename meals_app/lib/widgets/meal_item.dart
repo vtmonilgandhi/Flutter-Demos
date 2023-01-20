@@ -6,15 +6,16 @@ import '../screens/meal_detail_screen.dart';
 class MealItem extends StatelessWidget {
   final String id;
   final String title;
-  final String imageUl;
+  final String imageUrl;
   final int duration;
   final Complexity complexity;
   final Affordability affordability;
+  // final Function removeItem;
 
   const MealItem(
       {super.key,
       required this.title,
-      required this.imageUl,
+      required this.imageUrl,
       required this.duration,
       required this.complexity,
       required this.affordability,
@@ -47,7 +48,12 @@ class MealItem extends StatelessWidget {
   }
 
   void selectMeal(BuildContext ctx) {
-    Navigator.of(ctx).pushNamed(MealDetailScreen.routeName, arguments: id);
+    Navigator.of(ctx)
+        .pushNamed(MealDetailScreen.routeName, arguments: id)
+        .then((result) => {
+              // if (result != null)
+              // removeItem(result)
+            });
   }
 
   @override
@@ -67,7 +73,7 @@ class MealItem extends StatelessWidget {
                       topLeft: Radius.circular(15),
                       topRight: Radius.circular(15)),
                   child: Image.network(
-                    imageUl,
+                    imageUrl,
                     height: 250,
                     width: double.infinity,
                     fit: BoxFit.cover,
