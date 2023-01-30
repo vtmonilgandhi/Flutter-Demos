@@ -43,7 +43,7 @@ class CartItem extends StatelessWidget {
         Provider.of<Cart>(context, listen: false).removeItem(productId);
       },
       background: Container(
-        color: Theme.of(context).errorColor,
+        color: Theme.of(context).colorScheme.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         margin: const EdgeInsets.symmetric(horizontal: 15, vertical: 4),
@@ -61,7 +61,7 @@ class CartItem extends StatelessWidget {
             leading: CircleAvatar(
               backgroundColor: Theme.of(context).colorScheme.primary,
               foregroundColor:
-                  Theme.of(context).primaryTextTheme.headline6!.color,
+                  Theme.of(context).primaryTextTheme.titleLarge!.color,
               child: Padding(
                 padding: const EdgeInsets.all(5.0),
                 child: FittedBox(child: Text('\$$price')),

@@ -88,38 +88,36 @@ class _EditProductScreenState extends State<EditProductScreen> {
     setState(() {
       _isLoading = true;
     });
-    if (_editedProdcut.id != '') {
-      Provider.of<Products>(context, listen: false)
-          .updateProduct(_editedProdcut.id, _editedProdcut);
+
+    try {
+      if (_editedProdcut.id != '') {
+        await Provider.of<Products>(context, listen: false)
+            .updateProduct(_editedProdcut.id, _editedProdcut);
+      } else {
+        await Provider.of<Products>(context, listen: false)
+            .addProduct(_editedProdcut);
+      }
+    } catch (error) {
+      await showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('An error occurred!'),
+          content: const Text('Something went wrong.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Okay'),
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+            )
+          ],
+        ),
+      );
+    } finally {
       setState(() {
         _isLoading = false;
       });
       Navigator.of(context).pop();
-    } else {
-      try {
-        await Provider.of<Products>(context).addProduct(_editedProdcut);
-      } catch (error) {
-        await showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('An error occurred!'),
-            content: const Text('Something went wrong.'),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Okay'),
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                },
-              )
-            ],
-          ),
-        );
-      } finally {
-        setState(() {
-          _isLoading = false;
-        });
-        Navigator.of(context).pop();
-      }
     }
   }
 
