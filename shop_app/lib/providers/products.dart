@@ -6,6 +6,9 @@ import 'product.dart';
 import 'package:http/http.dart' as http;
 
 class Products with ChangeNotifier {
+  final String? authToken;
+  final String? userId;
+
   List<Product> _items = [
     // Product(
     //   id: 'p1',
@@ -53,6 +56,8 @@ class Products with ChangeNotifier {
   //   notifyListeners();
   // }
 
+  Products(this.authToken, this._items, this.userId);
+
   List<Product> get favoriteItems {
     return _items.where((prodItem) => prodItem.isFavorite).toList();
   }
@@ -64,9 +69,19 @@ class Products with ChangeNotifier {
     return [..._items];
   }
 
-  Future<void> fetchAndSetProducts() async {
-    final url = Uri.https(
-        'shop-app-flutter-5c717-default-rtdb.firebaseio.com', '/products.json');
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    var params = {'auth': authToken, 'orderBy': json.encode("creatorId")};
+
+    if (filterByUser) {
+      params = {
+        'auth': authToken,
+        'orderBy': json.encode("creatorId"),
+        'equalTo': json.encode(userId),
+      };
+    }
+
+    var url = Uri.https('shop-app-flutter-5c717-default-rtdb.firebaseio.com',
+        '/products.json', params);
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;
@@ -74,13 +89,20 @@ class Products with ChangeNotifier {
       if (extractedData.isEmpty) {
         return;
       }
+
+      url = Uri.https('shop-app-flutter-5c717-default-rtdb.firebaseio.com',
+          'userFavorites/$userId.json', params);
+      final favoriteResponse = await http.get(url);
+      final favoriteData =
+          json.decode(favoriteResponse.body) as Map<String, dynamic>;
+
       extractedData.forEach((prodId, prodData) {
         loadedProducts.add(Product(
             id: prodId,
             title: prodData['title'],
             description: prodData['description'],
             price: prodData['price'],
-            isFavorite: prodData['isFavorite'],
+            isFavorite: favoriteData[prodId] ?? false,
             imageUrl: prodData['imageUrl']));
       });
       _items = loadedProducts;
@@ -91,8 +113,13 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(Product prodcut) async {
-    final url = Uri.https(
-        'shop-app-flutter-5c717-default-rtdb.firebaseio.com', '/products.json');
+    var params = {
+      'auth': authToken,
+    };
+
+    final url = Uri.https('shop-app-flutter-5c717-default-rtdb.firebaseio.com',
+        '/products.json', params);
+
     try {
       final response = await http.post(url,
           body: json.encode({
@@ -100,7 +127,7 @@ class Products with ChangeNotifier {
             'description': prodcut.description,
             'imageUrl': prodcut.imageUrl,
             'price': prodcut.price,
-            'isFavorite': prodcut.isFavorite
+            'creatorId': userId,
           }));
 
       final newProduct = Product(
@@ -119,10 +146,15 @@ class Products with ChangeNotifier {
 
   Future<void> updateProduct(String id, Product newProdcut) async {
     final prodIndex = _items.indexWhere((prod) => prod.id == id);
+    var params = {
+      'auth': authToken,
+    };
+
     if (prodIndex >= 0) {
       final url = Uri.https(
           'shop-app-flutter-5c717-default-rtdb.firebaseio.com',
-          '/products/$id.json');
+          '/products/$id.json',
+          params);
       await http.patch(url,
           body: json.encode({
             'title': newProdcut.title,
@@ -136,8 +168,12 @@ class Products with ChangeNotifier {
   }
 
   Future<void> deleteProduct(String id) async {
+    var params = {
+      'auth': authToken,
+    };
+
     final url = Uri.https('shop-app-flutter-5c717-default-rtdb.firebaseio.com',
-        '/products/$id.json');
+        '/products/$id.json', params);
 
     final existingProductIndex = _items.indexWhere((prod) => prod.id == id);
     Product? existingProduct = _items[existingProductIndex];
@@ -149,7 +185,7 @@ class Products with ChangeNotifier {
     if (response.statusCode >= 400) {
       _items.insert(existingProductIndex, existingProduct);
       notifyListeners();
-      throw HttpException('Could not delete product.');
+      throw CustomHttpException('Could not delete product.');
     }
     existingProduct = null;
   }
